@@ -236,7 +236,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @param mixed $after After.
 		 * @return void
 		 */
-		function list_servers( $limit, $after ) {
+		function list_servers( $repository_id, $environment_id, $limit, $after ) {
 
 			$request = $this->base_uri . '/servers' . '?limit=' . $limit . '&after=' . $after;
 			return $this->fetch( $request );
