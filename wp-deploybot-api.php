@@ -41,8 +41,8 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * __construct function.
 		 *
 		 * @access public
-		 * @param mixed $api_token
-		 * @param mixed $account_subdomain
+		 * @param mixed $api_token API Token.
+		 * @param mixed $account_subdomain Account Subdomain.
 		 * @return void
 		 */
 		public function __construct( $api_token, $account_subdomain ) {
@@ -154,27 +154,92 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 
 		}
 
-		function get_repository() {
+
+		/**
+		 * Get Repository.
+		 *
+		 * @access public
+		 * @return void
+		 */
+		function get_repository( $repository_id ) {
+
+			$request = $this->base_uri . '/repositories/' . $repository_id;
+			return $this->fetch( $request );
 
 		}
 
-		function list_repositories() {
+		/**
+		 * List Repositories
+		 *
+		 * @access public
+		 * @param string $list (default: '')
+		 * @param string $after (default: '')
+		 * @return void
+		 */
+		function list_repositories( $list = '', $after = '' ) {
+
+			$request = $this->base_uri . '/repositories' . '?limit=' . $limit . '&after=' . $after;
+			return $this->fetch( $request );
 
 		}
 
-		function get_environment() {
+
+		/**
+		 * get_environment function.
+		 *
+		 * @access public
+		 * @return void
+		 */
+		function get_environment( $environment_id ) {
+
+			$request = $this->base_uri . '/environments/' . $environment_id;
+			return $this->fetch( $request );
+		}
+
+
+
+		/**
+		 * List Environments.
+		 *
+		 * @access public
+		 * @param mixed $limit
+		 * @param mixed $after
+		 * @return void
+		 */
+		function list_environments( $limit, $after ) {
+
+			$request = $this->base_uri . '/environments' . '?limit=' . $limit . '&after=' . $after;
+			return $this->fetch( $request );
 
 		}
 
-		function list_environments() {
+
+		/**
+		 * Get Server Details.
+		 *
+		 * @access public
+		 * @return void
+		 */
+		function get_server( $server_id ) {
+
+			$request = $this->base_uri . '/servers/';
+			return $this->fetch( $request );
 
 		}
 
-		function get_server() {
 
-		}
+		/**
+		 * List Servers.
+		 *
+		 * @access public
+		 * @param mixed $limit Limit.
+		 * @param mixed $after After.
+		 * @return void
+		 */
+		function list_servers( $limit, $after ) {
 
-		function list_servers() {
+			$request = $this->base_uri . '/servers' . '?limit=' . $limit . '&after=' . $after;
+			return $this->fetch( $request );
 
 		}
 
