@@ -38,6 +38,21 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		private $base_uri = 'https://' . static::$account_subdomain . '.deploybot.com/api/v1';
 
 		/**
+		 * __construct function.
+		 *
+		 * @access public
+		 * @param mixed $api_token
+		 * @param mixed $account_subdomain
+		 * @return void
+		 */
+		public function __construct( $api_token, $account_subdomain ) {
+
+			static::$api_token = $api_token;
+			static::$account_subdomain = $account_subdomain;
+
+		}
+
+		/**
 		 * Fetch the request from the API.
 		 *
 		 * @access private
@@ -171,30 +186,29 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 */
 		public function response_code_msg( $code = '' ) {
 			switch ( $code ) {
-			case 200:
-				$msg = __( 'Success.', 'text-domain' );
+				case 200:
+					$msg = __( 'Success.', 'text-domain' );
 				break;
-			case 400:
-				$msg = __( 'Bad Request: Malformed JSON payload.', 'text-domain' );
+				case 400:
+					$msg = __( 'Bad Request: Malformed JSON payload.', 'text-domain' );
 				break;
-			case 401:
-				$msg = __( 'Authentication Required: Missing or invalid API token.', 'text-domain' );
+				case 401:
+					$msg = __( 'Authentication Required: Missing or invalid API token.', 'text-domain' );
 				break;
-			case 403:
-				$msg = __( 'Forbidden: Attempting to perform a restricted action.', 'text-domain' );
+				case 403:
+					$msg = __( 'Forbidden: Attempting to perform a restricted action.', 'text-domain' );
 				break;
-			case 422:
-				$msg = __( 'Unprocessable Entity: Something is not right with the request data.', 'text-domain' );
+				case 422:
+					$msg = __( 'Unprocessable Entity: Something is not right with the request data.', 'text-domain' );
 				break;
-			case 500:
-				$msg = __( 'Internal Server Error: An error on our deploybot side. Please contact support if the error persists.', 'text-domain' );
+				case 500:
+					$msg = __( 'Internal Server Error: An error on our deploybot side. Please contact support if the error persists.', 'text-domain' );
 				break;
-			default:
-				$msg = __( 'Response code unknown.', 'text-domain' );
+				default:
+					$msg = __( 'Response code unknown.', 'text-domain' );
 				break;
 			}
 			return $msg;
 		}
-
 	}
 }
