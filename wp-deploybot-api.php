@@ -46,7 +46,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 *
 		 * @var string
 		 */
-		private $base_uri = 'https://' . static::$account_subdomain . '.deploybot.com/api/v1';
+		private $base_uri;
 
 		/**
 		 * __construct function.
@@ -60,7 +60,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 
 			static::$api_token = $api_token;
 			static::$account_subdomain = $account_subdomain;
-
+			$this->base_uri = 'https://' . static::$account_subdomain . '.deploybot.com/api/v1';
 		}
 
 		/**
@@ -183,11 +183,11 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * List Repositories
 		 *
 		 * @access public
-		 * @param string $list (default: '')
+		 * @param string $limit (default: '')
 		 * @param string $after (default: '')
 		 * @return void
 		 */
-		function list_repositories( $list = '', $after = '' ) {
+		function list_repositories( $limit = '', $after = '' ) {
 
 			$request = $this->base_uri . '/repositories' . '?limit=' . $limit . '&after=' . $after;
 			return $this->fetch( $request );
