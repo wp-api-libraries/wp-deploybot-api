@@ -17,7 +17,13 @@
 */
 
 /* Exit if accessed directly. */
-if ( ! defined( 'ABSPATH' ) ) { exit; }
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+if( ! class_exists( 'WpDeployBotBase' ) ) {
+	include_once( 'wp-api-libraries-base.php' );
+}
 
 /* Check if class exists. */
 if ( ! class_exists( 'DeployBotAPI' ) ) {
@@ -25,66 +31,65 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 	/**
 	 * DeployBot API Class.
 	 */
-	class DeployBotAPI {
+	class DeployBotAPI extends WpDeployBotBase {
 
 		/**
 		 * API Token.
 		 *
 		 * @var string
 		 */
-		static private $api_token;
-
-		/**
-		 * Account Subdomain
-		 *
-		 * @var string
-		 */
-		static private $account_subdomain;
+		private $api_token;
 
 		/**
 		 * URL to the API.
 		 *
 		 * @var string
 		 */
-		private $base_uri;
+		protected $base_uri;
 
-		/**
-		 * __construct function.
-		 *
-		 * @access public
-		 * @param mixed $api_token API Token.
-		 * @param mixed $account_subdomain Account Subdomain.
-		 * @return void
-		 */
-		public function __construct( $api_token, $account_subdomain ) {
+		protected $args;
 
-			static::$api_token = $api_token;
-			static::$account_subdomain = $account_subdomain;
-			$this->base_uri = 'https://' . static::$account_subdomain . '.deploybot.com/api/v1';
+		public function __construct( $subdomain, $api_key ){
+			$this->set_api_key( $api_key );
+			$this->set_subdomain( $subdomain );
 		}
 
-		/**
-		 * Fetch the request from the API.
-		 *
-		 * @access private
-		 * @param mixed $request Request URL.
-		 * @return $body Body.
-		 */
-		private function fetch( $request ) {
-
-			$request .= '?token=' .static::$api_token;
-			$response = wp_remote_get( $request );
-
-			$code = wp_remote_retrieve_response_code( $response );
-
-			if ( 200 !== $code ) {
-				return new WP_Error( 'response-error', sprintf( __( 'Server response code: %d', 'text-domain' ), $code ) );
-			}
-
-			$body = wp_remote_retrieve_body( $response );
-			return json_decode( $body );
+		public function set_api_key( $api_key ){
+			$this->api_key = $api_key;
 		}
 
+		public function set_subdomain( $subdomain ){
+			$this->base_uri = 'https://' . $subdomain . '.deploybot.com/api/v1/';
+		}
+
+		protected function set_headers(){
+			$this->args['headers'] = array(
+				'X-Api-Token' => $this->api_key,
+				'Accept'      => 'application/json'
+			);
+		}
+
+		protected function clear(){
+			$this->args = array();
+		}
+
+		protected function run( $route, $body = array(), $method = 'GET' ){
+			return $this->build_request( $route, $body, $method )->fetch();
+		}
+
+		private function parse_args( $args, $merge = array() ){
+	    $results = array();
+
+	    foreach( $args as $key => $val ){
+	      if( $val !== null ){
+	        $results[$key] = $val;
+	      }else if( is_array( $val ) && ! empty( $val ) ){
+	        $results[$key] = $val;
+	      }
+	    }
+
+	    return array_merge( $merge, $results );
+	  }
 
 		/**
 		 * get_users function.
@@ -92,11 +97,13 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @access public
 		 * @return void
 		 */
-		function get_users() {
+		function get_users( $limit = 50, $after = null ) {
+			$args = $this->parse_args( array(
+				'limit' => intval( $limit ),
+				'after' => $after
+			));
 
-			$request = $this->base_uri . '/users';
-			return $this->fetch( $request );
-
+			return $this->run( 'users', $args );
 		}
 
 
@@ -108,14 +115,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @return void
 		 */
 		function get_user( $user_id ) {
-
-			if ( empty( $user_id ) ) {
-				return new WP_Error( 'required-fields', __( 'Required fields are empty.', 'text-domain' ) );
-			}
-
-			$request = $this->base_uri . '/users/' . $user_id;
-			return $this->fetch( $request );
-
+			return $this->run( 'users/' . $user_id );
 		}
 
 		/**
@@ -128,11 +128,15 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @param mixed $after
 		 * @return void
 		 */
-		function list_deployments( $repository_id, $environment_id, $limit, $after ) {
+		function list_deployments( $repository_id, $environment_id, $limit = 50, $after = null ) {
+			$args = $this->parse_args( array(
+				'repository_id'  => $repository_id,
+				'environment_id' => $environment_id,
+				'limit'          => $limit,
+				'after'          => $after
+			));
 
-			$request = $this->base_uri . '/deployments';
-			return $this->fetch( $request );
-
+			return $this->run( 'deployments', $args );
 		}
 
 
@@ -144,10 +148,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @return void
 		 */
 		function get_deployment( $deployment_id ) {
-
-			$request = $this->base_uri . '/deployments/' . $deployment_id;
-			return $this->fetch( $request );
-
+			return $this->run( 'deployments/'.$deployment_id );
 		}
 
 
@@ -156,15 +157,18 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 *
 		 * @access public
 		 * @param mixed $environment_id
+		 * @param array $args           Additional arguments, supports:
+		 *                                user_id (default -> account owner)
+		 *                                deployed_version (git commit)
+		 *                                deploy_from_scratch (default false)
+		 *                                trigger_notifications (default true)
+		 *                                comment
 		 * @return void
 		 */
-		function trigger_deployment( $environment_id ) {
-
-			$request = $this->base_uri . '/deployments';
-			return $this->fetch( $request );
-
+		function trigger_deployment( $environment_id, $args = array() ) {
+			$args['environment_id'] = $environment_id;
+			return $this->run( 'deployments', $args, 'POST' );
 		}
-
 
 		/**
 		 * Get Repository.
@@ -173,10 +177,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @return void
 		 */
 		function get_repository( $repository_id ) {
-
-			$request = $this->base_uri . '/repositories/' . $repository_id;
-			return $this->fetch( $request );
-
+			return $this->run( 'repositories/'.$repository_id );
 		}
 
 		/**
@@ -187,13 +188,14 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @param string $after (default: '')
 		 * @return void
 		 */
-		function list_repositories( $limit = '', $after = '' ) {
+		function list_repositories( $limit = 50, $after = null ) {
+			$args = $this->parse_args( array(
+				'limit' => $limit,
+				'after' => $after
+			));
 
-			$request = $this->base_uri . '/repositories' . '?limit=' . $limit . '&after=' . $after;
-			return $this->fetch( $request );
-
+			return $this->run( 'repositories', $args );
 		}
-
 
 		/**
 		 * get_environment function.
@@ -202,12 +204,8 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @return void
 		 */
 		function get_environment( $environment_id ) {
-
-			$request = $this->base_uri . '/environments/' . $environment_id;
-			return $this->fetch( $request );
+			return $this->run( 'environment/'.$environment_id );
 		}
-
-
 
 		/**
 		 * List Environments.
@@ -217,13 +215,15 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @param mixed $after
 		 * @return void
 		 */
-		function list_environments( $limit, $after ) {
+		function list_environments( $repository_id = null, $limit = 50, $after = null ) {
+			$args = $this->parse_args( array(
+				'repository_id' => $repository_id,
+				'limit'         => 50,
+				'after'         => $after
+			));
 
-			$request = $this->base_uri . '/environments' . '?limit=' . $limit . '&after=' . $after;
-			return $this->fetch( $request );
-
+			return $this->run( 'environments', $args );
 		}
-
 
 		/**
 		 * Get Server Details.
@@ -232,10 +232,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @return void
 		 */
 		function get_server( $server_id ) {
-
-			$request = $this->base_uri . '/servers/';
-			return $this->fetch( $request );
-
+			return $this->run( 'server/'.$server_id );
 		}
 
 
@@ -247,11 +244,15 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		 * @param mixed $after After.
 		 * @return void
 		 */
-		function list_servers( $repository_id, $environment_id, $limit, $after ) {
+		function list_servers( $repository_id = null, $environment_id = null, $limit = 50, $after = null ) {
+			$args = $this->parse_args(array(
+				'repository_id'  => $repository_id,
+				'environment_id' => $environment_id,
+				'limit'          => $limit,
+				'after'          => $after
+			));
 
-			$request = $this->base_uri . '/servers' . '?limit=' . $limit . '&after=' . $after;
-			return $this->fetch( $request );
-
+			return $this->run( 'servers', $args );
 		}
 
 		/**
