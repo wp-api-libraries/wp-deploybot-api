@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if( ! class_exists( 'WpDeployBotBase' ) ) {
+if ( ! class_exists( 'WpDeployBotBase' ) ) {
 	include_once( 'wp-api-libraries-base.php' );
 }
 
@@ -49,47 +49,47 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 
 		protected $args;
 
-		public function __construct( $subdomain, $api_key ){
+		public function __construct( $subdomain, $api_key ) {
 			$this->set_api_key( $api_key );
 			$this->set_subdomain( $subdomain );
 		}
 
-		public function set_api_key( $api_key ){
+		public function set_api_key( $api_key ) {
 			$this->api_key = $api_key;
 		}
 
-		public function set_subdomain( $subdomain ){
+		public function set_subdomain( $subdomain ) {
 			$this->base_uri = 'https://' . $subdomain . '.deploybot.com/api/v1/';
 		}
 
-		protected function set_headers(){
+		protected function set_headers() {
 			$this->args['headers'] = array(
 				'X-Api-Token' => $this->api_key,
-				'Accept'      => 'application/json'
+				'Accept'      => 'application/json',
 			);
 		}
 
-		protected function clear(){
+		protected function clear() {
 			$this->args = array();
 		}
 
-		protected function run( $route, $body = array(), $method = 'GET' ){
+		protected function run( $route, $body = array(), $method = 'GET' ) {
 			return $this->build_request( $route, $body, $method )->fetch();
 		}
 
-		private function parse_args( $args, $merge = array() ){
-	    $results = array();
+		private function parse_args( $args, $merge = array() ) {
+			$results = array();
 
-	    foreach( $args as $key => $val ){
-	      if( $val !== null ){
-	        $results[$key] = $val;
-	      }else if( is_array( $val ) && ! empty( $val ) ){
-	        $results[$key] = $val;
-	      }
-	    }
+			foreach ( $args as $key => $val ) {
+				if ( $val !== null ) {
+					$results[ $key ] = $val;
+				} else if ( is_array( $val ) && ! empty( $val ) ) {
+					$results[ $key ] = $val;
+				}
+			}
 
-	    return array_merge( $merge, $results );
-	  }
+			return array_merge( $merge, $results );
+		}
 
 		/**
 		 * get_users function.
@@ -100,7 +100,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		function get_users( $limit = 50, $after = null ) {
 			$args = $this->parse_args( array(
 				'limit' => intval( $limit ),
-				'after' => $after
+				'after' => $after,
 			));
 
 			return $this->run( 'users', $args );
@@ -133,7 +133,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 				'repository_id'  => $repository_id,
 				'environment_id' => $environment_id,
 				'limit'          => $limit,
-				'after'          => $after
+				'after'          => $after,
 			));
 
 			return $this->run( 'deployments', $args );
@@ -191,7 +191,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 		function list_repositories( $limit = 50, $after = null ) {
 			$args = $this->parse_args( array(
 				'limit' => $limit,
-				'after' => $after
+				'after' => $after,
 			));
 
 			return $this->run( 'repositories', $args );
@@ -219,7 +219,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 			$args = $this->parse_args( array(
 				'repository_id' => $repository_id,
 				'limit'         => 50,
-				'after'         => $after
+				'after'         => $after,
 			));
 
 			return $this->run( 'environments', $args );
@@ -249,7 +249,7 @@ if ( ! class_exists( 'DeployBotAPI' ) ) {
 				'repository_id'  => $repository_id,
 				'environment_id' => $environment_id,
 				'limit'          => $limit,
-				'after'          => $after
+				'after'          => $after,
 			));
 
 			return $this->run( 'servers', $args );
